@@ -1,0 +1,27 @@
+---
+title: "Echocardiogram Data"
+author: "Maddy Matura"
+date: "October 15, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("~/Documents/github/Echocardiogram-Data-")
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(readr)
+library(knitr)
+library(car)
+echo <- read.csv("echocardiogram.csv")
+```
+
+
+```{r}
+
+```
+
