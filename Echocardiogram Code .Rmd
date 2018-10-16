@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd("~/Documents/github/Echocardiogram-Data-")
+setwd("~/Documents/github/Echocardiogram")
 library(ggplot2)
 library(dplyr)
 library(ggthemes)
@@ -23,5 +23,23 @@ echo <- read.csv("echocardiogram.csv")
 
 ```{r}
 
+reg.echo <- lm(survival~lvdd, data=echo)
+summary(reg.echo)
+
+echo2<- cbind(echo,reg.echo$residuals, reg.echo$fitted.values)
+echo2 <- echo2 %>%
+  rename(res = "reg.echo$residuals", fit= "reg.echo$fitted.values")
+
+echo2%>%
+  ggplot(aes(res)) +
+  geom_histogram(bins=15, color="blue", fill="orange")
+
+echo2%>%
+  ggplot(aes(fit, res)) +
+  geom_point() 
+
+shapiro.test(echo2$res)
+qqnorm(echo2$res)
+ncvTest(reg.echo)
 ```
 
