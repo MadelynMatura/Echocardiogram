@@ -17,29 +17,165 @@ library(ggthemes)
 library(readr)
 library(knitr)
 library(car)
-echo <- read.csv("echocardiogram.csv")
+library(rms)
+echo1 <- read.csv("echocardiogramfile.csv")
+```
+
+
+
+```{r}
+reg0 <- glm(alive~ age + wallmotion.index , echo1, family = binomial)
+summary(reg0)
+
+
+
+```
+
+```{r}
+echocor <- echo1 %>%
+  select(age, fractionalshortening, epss, lvdd, wallmotion.score, wallmotion.index, mult)
+
+cor(echocor)
+
+```
+
+```{r}
+reg0 <- glm(alive~ age + fractionalshortening + epss + lvdd + wallmotion.index + mult, echo1, family = binomial)
+summary(reg0)
+
+```
+
+```{r}
+lrm(alive~ age + fractionalshortening + epss + lvdd + wallmotion.index + mult , echo1)
 ```
 
 
 ```{r}
+reg1 <- glm(alive~ age + wallmotion.index, echo1, family = binomial)
+summary(reg1)
 
-reg.echo <- lm(survival~lvdd, data=echo)
-summary(reg.echo)
-
-echo2<- cbind(echo,reg.echo$residuals, reg.echo$fitted.values)
-echo2 <- echo2 %>%
-  rename(res = "reg.echo$residuals", fit= "reg.echo$fitted.values")
-
-echo2%>%
-  ggplot(aes(res)) +
-  geom_histogram(bins=15, color="blue", fill="orange")
-
-echo2%>%
-  ggplot(aes(fit, res)) +
-  geom_point() 
-
-shapiro.test(echo2$res)
-qqnorm(echo2$res)
-ncvTest(reg.echo)
 ```
+
+
+```{r}
+lrm(alive~ age + wallmotion.index + mult , echo1)
+```
+
+
+```{r}
+78.546-58.424
+pchisq(20.122, 2, lower.tail = F)
+```
+
+```{r}
+echo1%>%
+  ggplot(aes(age, alive))+
+  geom_point()+ 
+  stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+```
+
+
+```{r}
+echo1%>%
+  ggplot(aes(wallmotion.index, alive))+
+  geom_point()+ 
+  stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+```
+
+
+```{r}
+#Transformations
+
+echo2 <- echo1 %>%
+  mutate(logage= log(age), loglvdd= log(lvdd), logwall= log(wallmotion.index), agesq= age^2, lvddsq= lvdd^2, wallsq= wallmotion.index^2, sqrtage= sqrt(age), sqrtlvdd= sqrt(lvdd), sqrtwall= sqrt(wallmotion.index))
+
+
+reg2 <- glm(alive~ age + lvdd +logwall , echo2, family = binomial)
+summary(reg2)
+
+```
+
+```{r}
+lrm(alive~ age + lvdd + logwall , echo2)
+```
+
+```{r}
+echo2%>%
+  ggplot(aes(wallmotion.index, alive))+
+  geom_point()+ 
+  stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+```
+
+```{r}
+#Wald Test: The age, lvdd, and wallmotion.index variables are all significant predictors of death or not.
+#age:pval= 0.03234
+#lvdd: pval= 0.03736
+#wallmotion.index: pval= 0.01068
+
+
+#Dxy is 0.740. The Dxy is the number of concordant paris-number of discordnat pairs/total number of pairs. Based ont his formal, .740 is the percentage of concordant pairs in this model. Thus, 74% of the paris are concordant so this is a pretty good fit. 
+
+
+
+78.546-53.569 
+
+pchisq(24.977, 3, lower.tail = F)
+```
+
+```{r}
+#Likelihood ratio
+#Based on the likelihood ratio test, the p value is 0.0001. Based on this low p value, we can reject the null that the model has more predictive power without coefficinets that the variables add. There is good evidence that the coefficeints provided by at least 1 variable improves the fit of the model. 
+
+
+#Pearson residuals
+
+res3 <- residuals(reg2, type= "pearson")
+echo5<- cbind(echo2, res3, reg2$fitted.values)
+echo5<- echo5%>%
+  rename(fit= "reg2$fitted.values")
+
+echo5 %>%
+  ggplot(aes(res3))+
+  geom_histogram()
+
+```
+
+
+```{r}
+#Dont see too much overdispersion, mostly in between -2 and 2. 
+
+shapiro.test(res3)
+
+```
+
+```{r}
+#shapiro test gave a p value of  0.0001203, so we fail to reject the null that the residuals are normally distributed because the p value is above the threshold of 0.05. 
+qqnorm(res3)
+
+```
+
+```{r}
+#Normality not super important here, overdispersion is more important and hoslem test for fit. 
+
+
+
+hoslem.test(echo5$alive, echo5$fit, g= 10)
+
+##  Hosmer and Lemeshow goodness of fit (GOF) test
+
+## data:  echo5$alive, echo5$fit
+## X-squared = 2.376, df = 8, p-value = 0.9673
+#With the hoslem test, you want a high p value, which is what we got (p= 0.0.9673).The null hypothesis is that the logistic regression model is a good fit, so we fail to reject the null and have good evidence that this model is a good fit. 
+
+```
+
+```{r}
+
+```
+
+
+
 
