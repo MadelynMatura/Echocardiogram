@@ -17,61 +17,170 @@ library(ggthemes)
 library(readr)
 library(knitr)
 library(car)
-library(rms)
+#library(rms)
+
 echo1 <- read.csv("echocardiogramfile.csv")
 ```
 
 
-
 ```{r}
+echo1<- na.omit(echo)
+
+
+
+
+
 reg0 <- glm(alive~ age + wallmotion.index , echo1, family = binomial)
 summary(reg0)
 
 
-
-```
-
-```{r}
 echocor <- echo1 %>%
   select(age, fractionalshortening, epss, lvdd, wallmotion.score, wallmotion.index, mult)
 
 cor(echocor)
 
-```
-
-```{r}
 reg0 <- glm(alive~ age + fractionalshortening + epss + lvdd + wallmotion.index + mult, echo1, family = binomial)
 summary(reg0)
 
-```
 
-```{r}
-lrm(alive~ age + fractionalshortening + epss + lvdd + wallmotion.index + mult , echo1)
-```
+#lrm(alive~ age + fractionalshortening + epss + lvdd + wallmotion.index + mult , echo1)
 
-
-```{r}
 reg1 <- glm(alive~ age + wallmotion.index, echo1, family = binomial)
 summary(reg1)
 
-```
+
+#lrm(alive~ age + wallmotion.index + mult , echo1)
 
 
-```{r}
-lrm(alive~ age + wallmotion.index + mult , echo1)
-```
-
-
-```{r}
 78.546-58.424
 pchisq(20.122, 2, lower.tail = F)
-```
 
-```{r}
+
 echo1%>%
   ggplot(aes(age, alive))+
   geom_point()+ 
   stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+echo1%>%
+  ggplot(aes(wallmotion.index, alive))+
+  geom_point()+ 
+  stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+
+
+
+
+```
+
+
+```{r}
+
+#Transformations
+
+echo2 <- echo1 %>%
+  mutate(logage= log(age), loglvdd= log(lvdd), logwall= log(wallmotion.index), agesq= age^2, lvddsq= lvdd^2, wallsq= wallmotion.index^2, sqrtage= sqrt(age), sqrtlvdd= sqrt(lvdd), sqrtwall= sqrt(wallmotion.index))
+
+
+reg2 <- glm(alive~ age + lvdd +logwall , echo2, family = binomial)
+summary(reg2)
+
+
+#lrm(alive~ age + lvdd + logwall , echo2)
+
+
+
+echo2%>%
+  ggplot(aes(wallmotion.index, alive))+
+  geom_point()+ 
+  stat_smooth(method= "glm", method.args = list(family= "binomial"))
+
+#Wald Test: The age, lvdd, and wallmotion.index variables are all significant predictors of death or not.
+#age:pval= 0.03234
+#lvdd: pval= 0.03736
+#wallmotion.index: pval= 0.01068
+
+
+
+#Check meaning of dxy w Dr. Neal
+
+#Dxy is 0.740. The Dxy is the number of concordant paris-number of discordnat pairs/total number of pairs. Based ont his formal, .740 is the percentage of concordant pairs in this model. Thus, 74% of the paris are concordant so this is a pretty good fit. 
+
+
+
+78.546-53.569 
+pchisq(24.977, 3, lower.tail = F)
+
+#Drop in deviance shows a low p value which means that the drop in deviance for this model is significant. pval= 1.561242e-05
+
+#Likelihood ratio
+#Based on the likelihood ratio test, the p value is 0.0001. Based on this low p value, we can reject the null that the model has more predictive power without coefficinets that the variables add. There is good evidence that the coefficeints provided by at least 1 variable improves the fit of the model. 
+
+
+#Pearson residuals
+
+res3 <- residuals(reg2, type= "pearson")
+echo5<- cbind(echo2, res3, reg2$fitted.values)
+#echo5<- echo5%>%
+  #rename( fit= "reg2$fitted.values")
+
+echo5 %>%
+  ggplot(aes(res3))+
+  geom_histogram()
+
+#Dont see too much overdispersion, mostly in between -2 and 2. 
+
+shapiro.test(res3)
+
+#shapiro test gave a p value of  0.0001203, so we fail to reject the null that the residuals are normally distributed because the p value is above the threshold of 0.05. 
+qqnorm(res3)
+
+#Normality not super important here, overdispersion is more important and hoslem test for fit. 
+
+
+
+#hoslem.test(echo5$alive, echo5$fit, g= 10)
+
+#With the hoslem test, you want a high p value, which is what we got (p= 0.0.9673).The null hypothesis is that the logistic regression model is a good fit, so we fail to reject the null and have good evidence that this model is a good fit. 
+
+#Deviance residuals
+
+
+res7 <- residuals(reg2, type= "deviance")
+echo6<- cbind(echo1, res7, reg2$fitted.values)
+#echo6<- echo6%>%
+  #rename(fit= "reg2$fitted.values")
+
+echo6 %>%
+  ggplot(aes(res7))+
+  geom_histogram()
+
+#NO overdispersion, 90% of residuals in between -2 and 2
+
+shapiro.test(res7)
+
+#shapiro test gave a p value of 0.009576, so we fail to reject the null that the residuals are normally distributed because the p value is above the threshold of 0.05. NOt a big deal because dont have to assume normality for logistic
+qqnorm(res7)
+
+
+#qqnorm not super straight
+
+
+
+
+
+
+
+```
+
+```{r}
+
+
+
+qt(.95, 57)
+
+-12.79756 + (0.09370*60) + (0.99278*5) + (3.25113*.6)
+
+1-(-12.79756 + (0.09370*60) + (0.99278*5) + (3.25113*.6))
 
 ```
 
@@ -98,7 +207,7 @@ summary(reg2)
 ```
 
 ```{r}
-lrm(alive~ age + lvdd + logwall , echo2)
+#lrm(alive~ age + lvdd + logwall , echo2)
 ```
 
 ```{r}
@@ -134,8 +243,8 @@ pchisq(24.977, 3, lower.tail = F)
 
 res3 <- residuals(reg2, type= "pearson")
 echo5<- cbind(echo2, res3, reg2$fitted.values)
-echo5<- echo5%>%
-  rename(fit= "reg2$fitted.values")
+#echo5<- echo5%>%
+  #rename(fit= "reg2$fitted.values")
 
 echo5 %>%
   ggplot(aes(res3))+
@@ -162,7 +271,7 @@ qqnorm(res3)
 
 
 
-hoslem.test(echo5$alive, echo5$fit, g= 10)
+#hoslem.test(echo5$alive, echo5$fit, g= 10)
 
 ##  Hosmer and Lemeshow goodness of fit (GOF) test
 
