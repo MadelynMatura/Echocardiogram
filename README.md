@@ -6,8 +6,6 @@ This data set used in this project contains measures of structure and function o
 
 This project aims to identify a logistic model for predicting the probability of being alive after having a heart attack. 
 
-HHOME's mission is to present Denison University with suggestions for how it can improve its efforts to move toward carbon neutrality. One part of our project entails modeling the extent to which scope 3 emissions contribute to Denison's annual carbon calculation. The second is to predict what changes in sustainability behavior can and will do the future of the university's annual carbon footprint. 
-
 ### Getting Started ###
 
 ##Prerequisites##
