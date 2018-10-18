@@ -36,6 +36,11 @@ Echocardiograms are taken using high frequency sound waves in order to obtain a 
 
 This data was provided by:
 kaggle.com
+UCI Machine Learning Reposity
+Dua, D. and Karra Taniskidou, E. (2017). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
+
+https://archive.ics.uci.edu/ml/datasets/echocardiogram
+
 
 
 ### Built With ###
